@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>WebRTC Real-time Messaging</title>
+	<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+	<div class="container">
+		<header>
+			<h1>WebRTC Real-time Messaging System</h1>
+			<p class="subtitle">Low-latency peer-to-peer communication</p>
+		</header>
+
+		<main>
+			<div class="layout">
+				<aside class="sidebar">
+					<section class="control-panel">
+						<h2>Room Management</h2>
+						<div class="form-group">
+							<label for="userInput">Your Name</label>
+							<input type="text" id="userInput" placeholder="Enter your name" value="User">
+						</div>
+						<div class="form-group">
+							<label for="roomInput">Room ID</label>
+							<input type="text" id="roomInput" placeholder="Enter or create room" value="default-room">
+						</div>
+						<button id="joinBtn" class="btn btn-primary" onclick="joinRoom()">Join Room</button>
+						<button id="leaveBtn" class="btn btn-secondary" onclick="leaveRoom()" disabled>Leave Room</button>
+
+						<hr class="divider">
+
+						<h3>Media Controls</h3>
+						<button id="audioBtn" class="btn btn-small" onclick="toggleAudio()">📢 Audio ON</button>
+						<button id="videoBtn" class="btn btn-small" onclick="toggleVideo()">📹 Video ON</button>
+						<button id="screenBtn" class="btn btn-small" onclick="toggleScreen()">🖥️ Screen Share</button>
+
+						<hr class="divider">
+
+						<h3>Room Info</h3>
+						<div id="roomInfo" class="info-panel">
+							<p>Status: <span id="status" class="status-badge">Disconnected</span></p>
+							<p>Peers: <span id="peerCount">0</span></p>
+							<div id="peerList" class="peer-list"></div>
+						</div>
+					</section>
+				</aside>
+
+				<section class="main-content">
+					<div class="video-grid" id="videoGrid">
+						<div class="video-container local">
+							<video id="localVideo" autoplay playsinline muted></video>
+							<span class="video-label">You</span>
+						</div>
+					</div>
+
+					<div class="chat-section">
+						<h2>Chat Messages</h2>
+						<div id="messageList" class="message-list"></div>
+						<div class="message-input">
+							<input type="text" id="messageInput" placeholder="Type a message..." onkeypress="handleKeypress(event)">
+							<button id="sendBtn" onclick="sendMessage()">Send</button>
+						</div>
+					</div>
+
+					<div class="stats-panel">
+						<h3>Connection Stats</h3>
+						<div id="stats" class="stats-content">
+							<p>Bandwidth: <span id="bandwidth">-- Mbps</span></p>
+							<p>Latency: <span id="latency">-- ms</span></p>
+							<p>Packets Lost: <span id="packetsLost">0</span></p>
+							<p>Connection State: <span id="connState">--</span></p>
+						</div>
+					</div>
+				</section>
+			</div>
+		</main>
+	</div>
+
+	<script src="js/webrtc.js"></script>
+	<script src="js/client.js"></script>
+</body>
+</html>
