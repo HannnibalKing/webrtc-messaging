@@ -8,7 +8,7 @@ import (
 
 // StreamManager manages media streams
 type StreamManager struct {
-	tracks map[string]webrtc.RTPSender
+	tracks map[string]*webrtc.TrackLocalStaticRTP
 }
 
 // TrackInfo contains information about a media track
@@ -22,29 +22,24 @@ type TrackInfo struct {
 // NewStreamManager creates a new stream manager
 func NewStreamManager() *StreamManager {
 	return &StreamManager{
-		tracks: make(map[string]webrtc.RTPSender),
+		tracks: make(map[string]*webrtc.TrackLocalStaticRTP),
 	}
 }
 
 // AddTrack adds a media track to a peer connection
-func (sm *StreamManager) AddTrack(pc *webrtc.PeerConnection, trackType, codec string) (webrtc.RTPSender, error) {
+func (sm *StreamManager) AddTrack(pc *webrtc.PeerConnection, trackType, codec string) (*webrtc.RTPSender, error) {
 	if trackType != "audio" && trackType != "video" {
 		return nil, fmt.Errorf("invalid track type: %s", trackType)
 	}
 
-	mediaStream := &webrtc.MediaStream{
-		ID: "stream-" + codec,
-	}
-
-	track := &webrtc.Track{
-		PayloadType: 111,
-		Kind:        webrtc.RTPCodecTypeVideo,
-		ID:          "track-" + codec,
-		StreamID:    mediaStream.ID,
-	}
-
+	mimeType := webrtc.MimeTypeVP8
 	if trackType == "audio" {
-		track.Kind = webrtc.RTPCodecTypeAudio
+		mimeType = webrtc.MimeTypeOpus
+	}
+
+	track, err := webrtc.NewTrackLocalStaticRTP(webrtc.RTPCodecCapability{MimeType: mimeType}, "track-"+codec, "stream-"+codec)
+	if err != nil {
+		return nil, err
 	}
 
 	sender, err := pc.AddTrack(track)
@@ -52,24 +47,20 @@ func (sm *StreamManager) AddTrack(pc *webrtc.PeerConnection, trackType, codec st
 		return nil, err
 	}
 
+	sm.tracks[codec] = track
+
 	return sender, nil
 }
 
 // RemoveTrack removes a media track
-func (sm *StreamManager) RemoveTrack(pc *webrtc.PeerConnection, sender webrtc.RTPSender) error {
+func (sm *StreamManager) RemoveTrack(pc *webrtc.PeerConnection, sender *webrtc.RTPSender) error {
 	return pc.RemoveTrack(sender)
 }
 
 // GetConnectionStats returns statistics for a peer connection
 func GetConnectionStats(pc *webrtc.PeerConnection) (map[string]interface{}, error) {
 	stats := pc.GetStats()
-	result := make(map[string]interface{})
-
-	for _, stat := range stats {
-		result[stat.Type.String()] = stat
-	}
-
-	return result, nil
+	return map[string]interface{}{"report": stats}, nil
 }
 
 // ConfigureMediaCodecs configures media codecs for a peer connection

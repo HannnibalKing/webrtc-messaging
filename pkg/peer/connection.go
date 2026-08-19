@@ -14,6 +14,7 @@ type ConnectionManager struct {
 	mu              sync.RWMutex
 	mediaEngine     *webrtc.MediaEngine
 	settingEngine   *webrtc.SettingEngine
+	iceServers      []webrtc.ICEServer
 }
 
 // SignalingMessage represents a WebRTC signaling message
@@ -40,19 +41,15 @@ func NewConnectionManager(iceServers []webrtc.ICEServer) (*ConnectionManager, er
 		return nil, err
 	}
 
-	settingEngine := &webrtc.SettingEngine{
-		LoggerFactory: webrtc.NewDefaultLoggerFactory(),
-	}
+	settingEngine := &webrtc.SettingEngine{}
 
-	// Add ICE servers
-	for _, server := range iceServers {
-		settingEngine.AddICEServer(server)
-	}
+	_ = iceServers
 
 	return &ConnectionManager{
 		peerConnections: make(map[string]*webrtc.PeerConnection),
 		mediaEngine:     mediaEngine,
 		settingEngine:   settingEngine,
+		iceServers:      iceServers,
 	}, nil
 }
 
@@ -68,10 +65,10 @@ func (cm *ConnectionManager) CreatePeerConnection(peerID string) (*webrtc.PeerCo
 
 	api := webrtc.NewAPI(
 		webrtc.WithMediaEngine(cm.mediaEngine),
-		webrtc.WithSettingEngine(cm.settingEngine),
+		webrtc.WithSettingEngine(*cm.settingEngine),
 	)
 
-	peerConnection, err := api.NewPeerConnection(webrtc.Configuration{})
+	peerConnection, err := api.NewPeerConnection(webrtc.Configuration{ICEServers: cm.iceServers})
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +165,7 @@ func (cm *ConnectionManager) AddICECandidate(peerID string, candidate ICECandida
 	candidateInit := webrtc.ICECandidateInit{
 		Candidate:     candidate.Candidate,
 		SDPMLineIndex: candidate.SDPMLineIndex,
-		SDPMid:        candidate.SDPMid,
+		SDPMid:        &candidate.SDPMid,
 	}
 
 	return pc.AddICECandidate(candidateInit)

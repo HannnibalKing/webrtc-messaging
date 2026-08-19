@@ -216,7 +216,7 @@ func (h *Hub) BroadcastToRoom(roomID, senderPeerID string, data []byte) error {
 		peer.mu.RLock()
 		for _, dc := range peer.DataChannels {
 			if dc != nil && dc.ReadyState() == webrtc.DataChannelStateOpen {
-				dc.Send(webrtc.DataChannelMessage{Data: data})
+				dc.Send(data)
 			}
 		}
 		peer.mu.RUnlock()

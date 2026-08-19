@@ -29,9 +29,8 @@ type SignalingMessage struct {
 
 func main() {
 	var (
-		serverURL = flag.String("server", "ws://localhost:8080/ws", "WebSocket server URL")
-		userID    = flag.String("user", "user-"+fmt.Sprint(time.Now().Unix()), "User ID")
-		roomID    = flag.String("room", "test-room", "Room ID")
+		userID = flag.String("user", "user-"+fmt.Sprint(time.Now().Unix()), "User ID")
+		roomID = flag.String("room", "test-room", "Room ID")
 	)
 	flag.Parse()
 

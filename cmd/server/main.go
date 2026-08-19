@@ -12,7 +12,7 @@ import (
 	"github.com/yourusername/webrtc-messaging/pkg/message"
 	"github.com/yourusername/webrtc-messaging/pkg/peer"
 	"github.com/yourusername/webrtc-messaging/pkg/server"
-	"github.com/yourusername/webrtc-messaging/pkg/signal"
+	pkgSignal "github.com/yourusername/webrtc-messaging/pkg/signal"
 )
 
 func main() {
@@ -30,7 +30,7 @@ func main() {
 	iceServers := buildICEServers(cfg)
 
 	// Initialize hub
-	hub := signal.NewHub(cfg.MaxPeersPerRoom, iceServers)
+	hub := pkgSignal.NewHub(cfg.MaxPeersPerRoom, iceServers)
 
 	// Initialize connection manager
 	connManager, err := peer.NewConnectionManager(iceServers)
@@ -98,7 +98,7 @@ func buildICEServers(cfg *config.Config) []webrtc.ICEServer {
 }
 
 // registerMessageHandlers registers handlers for message routing
-func registerMessageHandlers(router *message.MessageRouter, hub *signal.Hub) {
+func registerMessageHandlers(router *message.MessageRouter, hub *pkgSignal.Hub) {
 	// Handle text messages
 	router.RegisterHandler(string(message.TextMessage), func(msg *message.Message) error {
 		fmt.Printf("[ROOM %s] %s: %s\n", msg.RoomID, msg.SenderID, msg.Content)

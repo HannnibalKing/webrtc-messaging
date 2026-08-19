@@ -272,12 +272,13 @@ func (c *Client) handleJoinRoom(event map[string]interface{}) {
 	// Setup ICE candidates
 	peerConn.OnICECandidate(func(candidate *webrtc.ICECandidate) {
 		if candidate != nil {
+			candidateInit := candidate.ToJSON()
 			c.send <- map[string]interface{}{
 				"type": "ice_candidate",
 				"candidate": map[string]interface{}{
-					"candidate":       candidate.Candidate,
-					"sdp_mline_index": candidate.SDPMLineIndex,
-					"sdp_mid":         candidate.SDPMid,
+					"candidate":       candidateInit.Candidate,
+					"sdp_mline_index": candidateInit.SDPMLineIndex,
+					"sdp_mid":         candidateInit.SDPMid,
 				},
 			}
 		}
@@ -336,9 +337,25 @@ func (c *Client) handleAnswer(event map[string]interface{}) {
 // handleICECandidate handles ICE candidates
 func (c *Client) handleICECandidate(event map[string]interface{}) {
 	candidateData, _ := event["candidate"].(map[string]interface{})
+	if candidateData == nil {
+		return
+	}
+
+	var sdpMid string
+	if val, ok := candidateData["sdp_mid"].(string); ok {
+		sdpMid = val
+	}
+
+	var sdpMLineIndex *uint16
+	if raw, ok := candidateData["sdp_mline_index"].(float64); ok {
+		idx := uint16(raw)
+		sdpMLineIndex = &idx
+	}
+
 	candidate := peer.ICECandidate{
 		Candidate: candidateData["candidate"].(string),
-		SDPMid:    candidateData["sdp_mid"].(string),
+		SDPMLineIndex: sdpMLineIndex,
+		SDPMid:        sdpMid,
 	}
 
 	c.server.connManager.AddICECandidate(c.peerID, candidate)
@@ -397,9 +414,6 @@ func (s *Server) closeClient(client *Client) {
 // getPeerInfoList returns information about all peers in a room
 func getPeerInfoList(room *signal.Room) []map[string]string {
 	var peers []map[string]string
-	room.mu.RLock()
-	defer room.mu.RUnlock()
-
 	for _, peer := range room.Peers {
 		peers = append(peers, map[string]string{
 			"id":   peer.ID,
